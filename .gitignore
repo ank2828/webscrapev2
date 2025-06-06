@@ -1,0 +1,23 @@
+# Environment variables
+.env
+
+# Node.js folder (downloaded binary)
+node-v22.16.0-win-x64/
+
+# Node modules (if any get created)
+node_modules/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
