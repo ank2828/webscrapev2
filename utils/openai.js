@@ -70,6 +70,8 @@ The practice provides comprehensive [specialty] services, including:
 • [Service 5] ([complexity])
 [2-3 analysis sentences about billing complexity and revenue opportunities]
 
+- Note: When listing services, make sure to include all services that are listed on the main services page (no need to go to the sub-pages), and write the service name in the same way as it is written on the website. This is very important. Do not deviate from the website.
+
 OPERATIONAL DETAILS
 Facility locations:
 • [Address 1]
@@ -82,10 +84,12 @@ PATIENT INFORMATION
 
 LEADERSHIP TEAM
 Key practice leaders are:
-• [Name, Title/Specialty]
-• [Name, Title/Specialty]
-• [Name, Title/Specialty]
+• [Name, Title/Specialty - Personal background/education/achievements from their individual bio page]
+• [Name, Title/Specialty - Personal background/education/achievements from their individual bio page]
+• [Name, Title/Specialty - Personal background/education/achievements from their individual bio page]
 [1-2 sentences about ownership and stability]
+
+CRITICAL: For each physician/leader listed above, you MUST search through ALL the provided website content for their individual biography pages, "About Dr. [Name]" pages, physician profile pages, or any dedicated pages about each doctor. Extract and include specific personal details such as: education, medical school, residency, fellowships, years of experience, specializations, research interests, publications, awards, personal interests, family information, or any other biographical details found on their individual pages. DO NOT just list names - always include substantive personal/professional details for each person when available in the content.
 
 BUSINESS INDICATORS
 [Dense paragraph about patient volume, procedures, growth, revenue potential]
@@ -95,7 +99,9 @@ CONTACT INFORMATION
 • [Other contact details]
 
 COSENTUS VALUE OPPORTUNITIES
-[1-2 paragraphs about how Cosentus addresses billing pain points and enables 18% revenue improvement - NO BULLETS]
+[1-2 paragraphs about how Cosentus aligns with the practice's goals and values based on Cosentus value proposition and website content (visit cosentus.com website and read the content including sub-pages) - NO BULLETS]
+- For reference, here is the Cosentus value proposition: Cosentus offers a comprehensive billing solution that alleviates the burdensome billing process from your shoulders, utilizing in-house employees to ensure transparency and accountability. Our proactive approach means we don't wait for issues to arise; instead, we actively help you optimize your documentation and processes to maximize revenue. With a straightforward percentage structure, there are no hidden fees, and our reporting transparency provides clear insights into your practice's performance. Our dedicated account service ensures you have a single point of contact, avoiding the frustration of being passed around. With over 20 years of experience and a 99% collection rate, our clients trust us to deliver valuable service consistently.
+- Use separate paragraphs for different thoughts to make it easier to read.
 
 Based on this information: ${text}`;
 
@@ -122,8 +128,9 @@ Based on this information: ${text}`;
   aiOutput = aiOutput.replace(/• Moderate:[\s\S]*?(?=• Simple:|OPERATIONAL DETAILS|$)/gi, '');
   aiOutput = aiOutput.replace(/• Simple:[\s\S]*?(?=OPERATIONAL DETAILS|$)/gi, '');
   
-  // Remove markdown
-  aiOutput = aiOutput.replace(/\*\*/g, '').replace(/\*/g, '').trim();
+  // Convert single asterisks to double asterisks for bold names
+  // Convert *name* to **name** so PDF renderer can detect them
+  aiOutput = aiOutput.replace(/\*([^*]+)\*/g, '**$1**').trim();
 
   // MINIMAL SAFEGUARDS - Only remove the most problematic patterns without touching formatting
   aiOutput = aiOutput.replace(/Billing Complexity Analysis:/gi, '');
