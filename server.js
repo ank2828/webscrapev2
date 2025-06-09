@@ -5,6 +5,46 @@ import dotenv from 'dotenv';
 import PDFDocument from 'pdfkit';
 dotenv.config();
 
+// Function to render text with bold formatting
+function renderLineWithBold(doc, text, options = {}) {
+  const boldPattern = /\*\*(.*?)\*\*/g;
+  let lastIndex = 0;
+  let match;
+  
+  // Start with regular font
+  doc.font('Helvetica');
+  
+  while ((match = boldPattern.exec(text)) !== null) {
+    // Add text before the bold part
+    if (match.index > lastIndex) {
+      const regularText = text.substring(lastIndex, match.index);
+      doc.font('Helvetica').text(regularText, options.indent || 0, doc.y, { 
+        continued: true,
+        lineBreak: false 
+      });
+    }
+    
+    // Add the bold part
+    doc.font('Helvetica-Bold').text(match[1], { 
+      continued: true,
+      lineBreak: false 
+    });
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Add remaining text after the last bold part
+  if (lastIndex < text.length) {
+    const remainingText = text.substring(lastIndex);
+    doc.font('Helvetica').text(remainingText, { 
+      continued: false 
+    });
+  } else {
+    // If we ended with bold text, need to break the line
+    doc.text('', { continued: false });
+  }
+}
+
 const app = express();
 
 app.use(express.static('public'));
@@ -98,14 +138,16 @@ app.post('/generate-pdf', async (req, res) => {
         doc.fontSize(16).font('Helvetica-Bold').text(trimmedLine, { align: 'left' });
         currentY = doc.y + 8;
       } else if (trimmedLine.startsWith('•')) {
-        // Bullet points
+        // Bullet points - handle bold text within bullets
         doc.y = currentY;
-        doc.fontSize(11).font('Helvetica').text(trimmedLine, { indent: 0 });
+        doc.fontSize(11);
+        renderLineWithBold(doc, trimmedLine, { indent: 0 });
         currentY = doc.y + 4;
       } else {
-        // Regular text
+        // Regular text - handle bold text within paragraphs
         doc.y = currentY;
-        doc.fontSize(11).font('Helvetica').text(trimmedLine, { indent: 0 });
+        doc.fontSize(11);
+        renderLineWithBold(doc, trimmedLine, { indent: 0 });
         currentY = doc.y + 8;
       }
     });
