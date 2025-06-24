@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Past Reports - Sales Reporter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <span class="brand-icon">✦</span>
+        <span class="brand-text">Sales Reporter</span>
+      </div>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/past-reports" class="nav-link active">Past Reports</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Past Reports Section -->
+  <div class="past-reports-section">
+    <div class="past-reports-container">
+      <div class="section-header">
+        <div class="ai-badge">
+          <span class="badge-icon">✦</span>
+          <span class="badge-text">AI-Powered Intelligence</span>
+        </div>
+        
+        <h1 class="page-title">Past Reports</h1>
+        <p class="page-subtitle">
+          View and download all reports generated in the last 7 days
+        </p>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading-state" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading past reports...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="empty-container" style="display: none;">
+        <div class="empty-icon">📋</div>
+        <h3 class="empty-title">No Reports Yet</h3>
+        <p class="empty-description">
+          You haven't generated any reports in the last 7 days.<br>
+          <a href="/" class="empty-link">Generate your first report</a> to get started.
+        </p>
+      </div>
+
+      <!-- Reports List -->
+      <div id="reports-list" class="reports-list" style="display: none;">
+        <!-- Reports will be loaded here dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Viewer Modal -->
+  <div id="pdf-modal" class="pdf-modal" style="display: none;">
+    <div class="pdf-modal-overlay" onclick="closePdfModal()"></div>
+    <div class="pdf-modal-content">
+      <div class="pdf-modal-header">
+        <h3 id="pdf-modal-title">Report</h3>
+        <button class="pdf-modal-close" onclick="closePdfModal()">×</button>
+      </div>
+      
+      <!-- Main content area with side-by-side layout -->
+      <div class="pdf-modal-body">
+        <!-- PDF Viewer Container -->
+        <div class="pdf-viewer-container">
+          <iframe id="pdf-modal-viewer" class="pdf-modal-iframe"></iframe>
+        </div>
+        
+        <!-- AI Chat Interface -->
+        <div class="ai-chat-container">
+          <div class="ai-chat-header">
+            <span class="ai-chat-icon">🤖</span>
+            <span class="ai-chat-title">Ask AI Agent</span>
+            <span class="ai-chat-subtitle">Ask questions about this report</span>
+          </div>
+          
+          <div id="chat-messages" class="chat-messages">
+            <!-- Chat messages will appear here -->
+          </div>
+          
+          <div class="chat-input-container">
+            <input 
+              type="text" 
+              id="chat-input" 
+              class="chat-input" 
+              placeholder="Ask about services, people, or any details"
+              maxlength="200"
+            >
+            <button id="chat-send" class="chat-send-btn">
+              <span class="chat-send-icon">➤</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="delete-modal" style="display: none;">
+    <div class="delete-modal-overlay" onclick="closeDeleteModal()"></div>
+    <div class="delete-modal-content">
+      <div class="delete-modal-header">
+        <h3>Delete Report</h3>
+        <button class="delete-modal-close" onclick="closeDeleteModal()">×</button>
+      </div>
+      <div class="delete-modal-body">
+        <p>Are you sure you want to delete this report?</p>
+        <p id="delete-report-info" class="delete-info">This action cannot be undone.</p>
+      </div>
+      <div class="delete-modal-footer">
+        <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+        <button id="confirm-delete-btn" class="btn-delete-confirm">Delete Report</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="past-reports.js"></script>
+</body>
+</html> 

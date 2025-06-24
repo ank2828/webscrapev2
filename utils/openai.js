@@ -2,8 +2,14 @@ import OpenAI from 'openai';
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Check if API key exists
+const apiKey = process.env.OPENAI_API_KEY;
+if (!apiKey) {
+  console.warn('⚠️ OPENAI_API_KEY not found in environment variables');
+}
+
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: apiKey || 'dummy-key-for-testing' // Provide dummy key to prevent initialization error
 });
 
 export async function summarizeWebsite(text) {
@@ -89,7 +95,7 @@ Key practice leaders are:
 • [Name, Title/Specialty - Personal background/education/achievements from their individual bio page]
 [1-2 sentences about ownership and stability]
 
-CRITICAL: For each physician/leader listed above, you MUST search through ALL the provided website content for their individual biography pages, "About Dr. [Name]" pages, physician profile pages, or any dedicated pages about each doctor. Extract and include specific personal details such as: education, medical school, residency, fellowships, years of experience, specializations, research interests, publications, awards, personal interests, family information, or any other biographical details found on their individual pages. DO NOT just list names - always include substantive personal/professional details for each person when available in the content.
+CRITICAL: For each physician/leader listed above, you MUST search through ALL the provided website content for their individual biography pages, "About Dr. [Name]" pages, physician profile pages, or any dedicated pages about each doctor. Extract and include specific personal details such as: education, medical school, residency, fellowships, years of experience, specializations, research interests, publications, awards, personal interests, family information, or any other biographical details found on their individual pages. DO NOT just list names - always include substantive personal/professional details for each person when available in the content. w
 
 BUSINESS INDICATORS
 [Dense paragraph about patient volume, procedures, growth, revenue potential]
@@ -138,4 +144,215 @@ Based on this information: ${text}`;
   aiOutput = aiOutput.replace(/The patient population includes[\s\S]*?(?=OPERATIONAL DETAILS|PATIENT INFORMATION|LEADERSHIP TEAM|$)/gi, '');
 
   return aiOutput;
+}
+
+// Function for AI chat agent to answer questions about reports
+export async function chatWithReport(question, reportData) {
+  if (!question || !reportData) {
+    throw new Error('Question and report data are required');
+  }
+
+  try {
+    // Prepare comprehensive context from all available data
+    const summary = reportData.summary_content || '';
+    const crawledPages = reportData.crawled_content?.pages || [];
+    const domain = reportData.domain || '';
+    
+    // Create a more structured data format for the AI
+    let structuredData = `DOMAIN: ${domain}\n\n`;
+    
+    // Add the summary report
+    structuredData += `GENERATED REPORT SUMMARY:\n${summary}\n\n`;
+    
+    // Add detailed raw data from each page
+    structuredData += `RAW WEBSITE DATA FROM ${crawledPages.length} PAGES:\n\n`;
+    
+    crawledPages.forEach((page, index) => {
+      structuredData += `=== PAGE ${index + 1}: ${page.url} ===\n`;
+      structuredData += `TITLE: ${page.title || 'No title'}\n`;
+      structuredData += `META DESCRIPTION: ${page.description || 'No description'}\n`;
+      
+      if (page.headings && page.headings.length > 0) {
+        structuredData += `HEADINGS:\n${page.headings.map(h => `- ${h}`).join('\n')}\n`;
+      }
+      
+      if (page.paragraphs && page.paragraphs.length > 0) {
+        structuredData += `CONTENT:\n${page.paragraphs.map(p => `- ${p}`).join('\n')}\n`;
+      }
+      
+      // Add lists (services, specialties, etc.)
+      if (page.lists && page.lists.length > 0) {
+        structuredData += `LISTS/SERVICES:\n`;
+        page.lists.forEach((list, listIndex) => {
+          structuredData += `List ${listIndex + 1}:\n${list.map(item => `  - ${item}`).join('\n')}\n`;
+        });
+      }
+      
+      // Add contact information
+      if (page.contactInfo) {
+        if (page.contactInfo.phones && page.contactInfo.phones.length > 0) {
+          structuredData += `PHONE NUMBERS: ${page.contactInfo.phones.join(', ')}\n`;
+        }
+        if (page.contactInfo.emails && page.contactInfo.emails.length > 0) {
+          structuredData += `EMAIL ADDRESSES: ${page.contactInfo.emails.join(', ')}\n`;
+        }
+        if (page.contactInfo.addresses && page.contactInfo.addresses.length > 0) {
+          structuredData += `ADDRESSES:\n${page.contactInfo.addresses.map(addr => `- ${addr}`).join('\n')}\n`;
+        }
+      }
+      
+      // Add tables (structured data)
+      if (page.tables && page.tables.length > 0) {
+        structuredData += `TABLES/STRUCTURED DATA:\n`;
+        page.tables.forEach((table, tableIndex) => {
+          structuredData += `Table ${tableIndex + 1}:\n`;
+          table.forEach(row => {
+            structuredData += `  ${row.join(' | ')}\n`;
+          });
+        });
+      }
+      
+      structuredData += `\n`;
+    });
+    
+    const systemPrompt = `You are an AI sales assistant that helps users understand and work with a specific company's report about ${domain}.
+
+CRITICAL DATA USAGE INSTRUCTIONS:
+1. ALWAYS prioritize the scraped data provided below as your PRIMARY source of truth
+2. When asked about "all services" or "what services they offer", you MUST list EVERY service mentioned in ANY part of the data
+3. Search through BOTH the summary report AND all the detailed raw page data thoroughly
+4. When you find relevant information, cite which page it came from (e.g., "According to their Services page...")
+5. Be comprehensive and detailed - provide ALL relevant details from the scraped data
+6. Focus on factual information from the scraped website content as your foundation
+
+ENHANCED CAPABILITIES:
+- For factual questions: Use ONLY the provided data
+- For analytical/strategic questions (like "discovery call cheat sheet", "talking points", "competitive analysis"): 
+  * Use the scraped data as your foundation
+  * Apply general sales/business knowledge to create useful formats and insights
+  * Always base recommendations on the specific company details you found
+  * Clearly distinguish between facts from the data vs. your strategic recommendations
+
+EXAMPLE APPROACHES:
+- "What services do they offer?" → List ALL services from scraped data only
+- "Create a discovery call cheat sheet" → Use company data + sales methodology to create useful format
+- "What are their contact details?" → Use only scraped contact information
+- "What questions should I ask about their spine surgery program?" → Combine their specific spine services with general discovery questions
+
+FORMATTING REQUIREMENTS - CRITICAL:
+- ALWAYS use markdown formatting for better readability
+- Use ## for main section headers (e.g., ## Services Offered)
+- Use ### for subsections (e.g., ### Surgical Services)
+- Use **bold** for important terms, names, and key information
+- ALWAYS use bullet points (-) for lists - NEVER put multiple items on one line
+- Each service/item must be on its own line with a dash (-)
+- Use numbered lists (1.) when showing steps or priorities
+- Add proper spacing between sections with double line breaks
+- NEVER create run-on sentences with multiple items separated by dashes
+- Example of CORRECT formatting:
+  ### Surgical Services
+  - **Spine Surgery** (complex procedures)
+  - **Total Joint Replacement** (hip, knee, shoulder)
+  - **Sports Medicine** (arthroscopic procedures)
+  
+- Example of INCORRECT formatting (DO NOT DO THIS):
+  - Spine Surgery (complex) - Total Joint Replacement (complex) - Sports Medicine (moderate)
+
+SPECIAL INSTRUCTION FOR SERVICES QUESTIONS:
+If asked about services, procedures, or what they offer, you must:
+- Check the summary report for condensed services
+- Check ALL raw page data for complete service lists
+- Look in headings, content paragraphs, lists, and any other sections
+- Provide the MOST COMPLETE list possible from all sources
+- Organize services by category if possible (surgical vs non-surgical, by specialty, etc.)
+- Format as clear bullet points with **bold** service names
+
+AVAILABLE DATA:
+${structuredData.substring(0, 20000)} ${structuredData.length > 20000 ? '\n\n[Note: Some data truncated due to context limits, but comprehensive data included above]' : ''}
+
+When answering, always:
+- Search through both the summary report AND the raw page data
+- For services questions, be comprehensive and list everything found
+- Cite your sources (which page the information came from)
+- Be specific about what you found
+- If information isn't in the data, clearly state that`;
+
+    // Check if this is a services-related question to provide specific formatting instructions
+    const isServicesQuestion = question.toLowerCase().includes('service') || 
+                               question.toLowerCase().includes('procedure') || 
+                               question.toLowerCase().includes('treatment') ||
+                               question.toLowerCase().includes('offer') ||
+                               question.toLowerCase().includes('provide');
+    
+    // Detect question type to provide appropriate instructions
+    const isFactualQuestion = question.toLowerCase().includes('what') && 
+                              (question.toLowerCase().includes('service') || 
+                               question.toLowerCase().includes('contact') ||
+                               question.toLowerCase().includes('location') ||
+                               question.toLowerCase().includes('phone') ||
+                               question.toLowerCase().includes('address'));
+    
+    const isStrategicQuestion = question.toLowerCase().includes('cheat sheet') ||
+                               question.toLowerCase().includes('talking points') ||
+                               question.toLowerCase().includes('discovery call') ||
+                               question.toLowerCase().includes('questions to ask') ||
+                               question.toLowerCase().includes('competitive') ||
+                               question.toLowerCase().includes('strategy') ||
+                               question.toLowerCase().includes('approach');
+    
+    let userPrompt;
+    
+    if (isFactualQuestion) {
+      userPrompt = `Based ONLY on the provided scraped data about ${domain}, please answer this factual question: ${question}`;
+    } else if (isStrategicQuestion) {
+      userPrompt = `Using the provided scraped data about ${domain} as your foundation, create a strategic response to this request: ${question}
+
+INSTRUCTIONS FOR STRATEGIC RESPONSES:
+- Use ALL the specific company details from the scraped data as your foundation
+- Apply general sales/business methodology to create useful formats
+- Clearly distinguish between facts from the data vs. strategic recommendations
+- Make it practical and actionable for someone working with this specific company`;
+    } else {
+      userPrompt = `Using the provided data about ${domain} as your primary source, please answer this question: ${question}`;
+    }
+    
+    if (isServicesQuestion) {
+      userPrompt += `
+
+CRITICAL FORMATTING REMINDER FOR SERVICES:
+- Use ### for service categories (e.g., ### Surgical Services)
+- Put each individual service on its own line with a dash (-)
+- Use **bold** for service names
+- NEVER put multiple services on the same line separated by dashes
+- Example format:
+  ### Surgical Services
+  - **Spine Surgery** (complex procedures)
+  - **Total Joint Replacement** (hip, knee, shoulder)
+  - **Sports Medicine** (arthroscopic procedures)`;
+    }
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { 
+          role: 'user', 
+          content: userPrompt
+        }
+      ],
+      max_tokens: 600, // Increased for more detailed responses
+      temperature: 0.3 // Lower temperature for more factual responses
+    });
+
+    const answer = response.choices[0].message.content.trim();
+    
+    return {
+      answer,
+      tokens_used: response.usage?.total_tokens || 0
+    };
+
+  } catch (error) {
+    console.error('❌ Error in chat with report:', error);
+    throw new Error('Failed to generate response. Please try again.');
+  }
 }
