@@ -3,38 +3,89 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sales Reporter - Cosentus Intelligence Platform</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <title>Sales Reporter - Automated Intelligence Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Modern Navigation Bar -->
+  <!-- Navigation Bar -->
   <nav class="navbar">
     <div class="nav-container">
-      <a href="/" class="nav-logo">
-        <div class="nav-logo-text">
-          <span class="logo-co">CO</span><span class="logo-sentus">SENTUS</span>
-        </div>
-        <span class="logo-intelligence">INTELLIGENCE</span>
-      </a>
+      <div class="nav-brand">
+        <span class="brand-icon">✦</span>
+        <span class="brand-text">Sales Reporter</span>
+      </div>
+      <div class="nav-links">
+        <a href="/" class="nav-link active">Home</a>
+        <a href="/past-reports" class="nav-link">Past Reports</a>
+      </div>
     </div>
   </nav>
 
-  <!-- Main Content Area -->
-  <div class="main-content">
-    <div class="main-container">
-      <div class="command-panel">
-        <h1>Cosentus Sales Report Generator</h1>
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="hero-container">
+      <!-- Hero Content -->
+      <div class="hero-content">
+        <div class="ai-badge">
+          <span class="badge-icon">✦</span>
+          <span class="badge-text">AI-Powered Intelligence</span>
+        </div>
+        
+        <h1 class="hero-title">
+          We analyze your prospects into<br>
+          <span class="accent-text">actionable sales insights</span>
+        </h1>
+        
+        <p class="hero-description">
+          Stop spending hours researching companies manually. Our AI-powered platform<br>
+          instantly generates comprehensive sales reports—so you can focus<br>
+          on what actually matters: closing deals.
+        </p>
+      </div>
 
-        <div class="input-container">
-          <input type="text" class="input-box" placeholder="Enter URL here...">
-          <button class="generate-btn">Generate Report</button>
+      <!-- Stats Section -->
+      <div class="stats-container">
+        <div class="stat-item">
+          <div class="stat-number">90% </div>
+          <div class="stat-label">Less research time</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-number">3-5 mins </div>
+          <div class="stat-label">To complete report</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-number">144 hrs/yr <span class="stat-label-inline">Time saved per user</span></div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <div class="stat-icon">✓</div>
+          <div class="stat-label">Enterprise ready</div>
         </div>
       </div>
     </div>
+  </div>
 
-    <iframe id="pdf-viewer" style="display: none;"></iframe>
-    <a id="download-link" class="download-btn" href="#" download>Download PDF</a>
+  <!-- Report Generator Section -->
+  <div class="report-section" id="report-generator">
+    <div class="report-container">
+      <div class="section-header">
+        <h2 class="section-title">Generate Your Sales Report</h2>
+        <p class="section-subtitle">
+          Enter any company URL and get instant intelligence to power your outreach
+        </p>
+      </div>
+
+      <div class="input-container">
+        <input type="text" class="input-box" placeholder="Enter company URL (e.g., https://example.com)">
+        <button class="generate-btn">Generate Report</button>
+      </div>
+
+      <iframe id="pdf-viewer" style="display: none;"></iframe>
+      <a id="download-link" class="download-btn" href="#" download>Download PDF Report</a>
+    </div>
   </div>
 
   <script src="scripts.js"></script>

@@ -22,30 +22,9 @@ function initSalesReporter() {
       return;
     }
 
-    // Array of loading messages that cycle during analysis
-    const loadingMessages = [
-      'Analyzing Practice...',
-      'Scanning Website...',
-      'Identifying Services...',
-      'Mapping Providers...',
-      'Evaluating Technology...',
-      'Assessing Market Position...',
-      'Reviewing Patient Experience...',
-      'Analyzing Competition...',
-      'Calculating Opportunities...',
-      'Finalizing Intelligence...'
-    ];
-
-    let messageIndex = 0;
-    generateBtn.textContent = loadingMessages[0];
+    generateBtn.textContent = 'Analyzing Practice...';
     generateBtn.disabled = true;
     generateBtn.classList.add('pulsing');
-
-    // Start cycling through messages every 8 seconds
-    const messageInterval = setInterval(() => {
-      messageIndex = (messageIndex + 1) % loadingMessages.length;
-      generateBtn.textContent = loadingMessages[messageIndex];
-    }, 8000);
 
     try {
       const response = await fetch('/generate-pdf', {
@@ -66,9 +45,6 @@ function initSalesReporter() {
         downloadLink.href = pdfUrl;
         downloadLink.download = `${domain}_sales_intelligence_report.pdf`;
         downloadLink.style.display = 'inline-block';
-        
-        // Scroll to PDF
-        pdfViewer.scrollIntoView({ behavior: 'smooth' });
       } else {
         const errorData = await response.json();
         alert(`Error generating report: ${errorData.message || 'Please try again.'}`);
@@ -77,7 +53,6 @@ function initSalesReporter() {
       console.error('Network error:', error);
       alert('Network error. Please check your connection and try again.');
     } finally {
-      clearInterval(messageInterval);
       generateBtn.textContent = 'Generate Report';
       generateBtn.disabled = false;
       generateBtn.classList.remove('pulsing');
