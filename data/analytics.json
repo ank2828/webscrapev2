@@ -1,0 +1,23 @@
+[
+  {
+    "id": "aed1dcdd-63b5-49c7-bb4d-34a883010ba5",
+    "event_type": "report_generated",
+    "report_id": "39879330-6421-490c-b3e3-43d1f35eb3b8",
+    "metadata": {
+      "pages_crawled": 1,
+      "crawl_time_ms": 11930,
+      "ai_time_ms": 19014,
+      "total_time_ms": 30962
+    },
+    "created_at": "2025-08-14T22:48:44.911Z"
+  },
+  {
+    "id": "f96f5b70-cc10-498d-8487-0c9dcbd3ad02",
+    "event_type": "past_report_accessed",
+    "report_id": "39879330-6421-490c-b3e3-43d1f35eb3b8",
+    "metadata": {
+      "accessed_at": "2025-08-14T22:48:45.032Z"
+    },
+    "created_at": "2025-08-14T22:48:45.037Z"
+  }
+]

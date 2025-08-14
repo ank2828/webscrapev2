@@ -126,32 +126,48 @@ function addChatMessage(text, type) {
   return messageDiv;
 }
 
-// Enhanced markdown parser for AI responses
-function parseMarkdown(text) {
-  let html = text;
+    // Enhanced markdown parser for AI responses
+  function parseMarkdown(text) {
+    let html = text;
+    
+    // Merge lines where a name ends with a period and the next line starts with credentials (handles multiple credentials and edge cases)
+    html = html.replace(/([A-Za-z\-\'\. ]+)\.\s*[\r\n]+((?:[A-Z][a-z]*\.?)+(?:,? [A-Z][a-z]*\.?)*)(?:\s*[\r\n]+)?( is| who| with| known| recognized| focuses| provides| offers| specializes| addresses| emphasizes| Board Certified| is Board Certified|,|\.)/g, '$1, $2$3');
+    
+    // FIRST: Fix doctor listings that are split across lines
+    // Remove all ** bold formatting first to prevent display issues
+    html = html.replace(/\*\*/g, '');
+    
+    // COMPREHENSIVE doctor name cleanup - handle all variations
+    // Replace any pattern of "Dr. Name." + line break + "M.D." with clean format
+    html = html.replace(/\bDr\.\s+([A-Za-z\s]+)\.\s*[\r\n]+\s*M\.D\./g, 'Dr. $1 M.D.');
+    
+    // Clean up any remaining doctor name patterns with extra content
+    html = html.replace(/\bDr\.\s+([A-Za-z\s]+)\.\s*[\r\n]+\s*M\.D\.\s*([^.])/g, 'Dr. $1 M.D. $2');
+    
+    // Remove any stray periods that might be left
+    html = html.replace(/Dr\.\s+([^.]+)\s+M\.D\./g, 'Dr. $1 M.D.');
+    
+    // Fix run-on bullet points like "- Item1 - Item2 - Item3"
+    html = html.replace(/^([-*] .+?)( - .+)+$/gm, (match) => {
+      return match.split(' - ').map((item, index) => {
+        if (index === 0) return item; // First item already has dash
+        return '- ' + item.trim();
+      }).join('\n');
+    });
+    
+    // Fix inline lists that should be bullet points
+    // Pattern: "Services: Service1, Service2, Service3"
+    html = html.replace(/^(.+?:)\s*(.+,\s*.+)/gm, (match, label, items) => {
+      const itemList = items.split(',').map(item => `- ${item.trim()}`).join('\n');
+      return `${label}\n${itemList}`;
+    });
   
-  // First, fix common clumpy formatting issues
-  // Fix run-on bullet points like "- Item1 - Item2 - Item3"
-  html = html.replace(/^([-*] .+?)( - .+)+$/gm, (match) => {
-    return match.split(' - ').map((item, index) => {
-      if (index === 0) return item; // First item already has dash
-      return '- ' + item.trim();
-    }).join('\n');
-  });
-  
-  // Fix inline lists that should be bullet points
-  // Pattern: "Services: Service1, Service2, Service3"
-  html = html.replace(/^(.+?:)\s*(.+,\s*.+)/gm, (match, label, items) => {
-    const itemList = items.split(',').map(item => `- ${item.trim()}`).join('\n');
-    return `${label}\n${itemList}`;
-  });
-  
-  // Headers (## Header)
+  // Headers (## Header, ### Subheader, #### Bold subheader)
   html = html.replace(/^## (.+)$/gm, '<h3 class="ai-header">$1</h3>');
   html = html.replace(/^### (.+)$/gm, '<h4 class="ai-subheader">$1</h4>');
+  html = html.replace(/^#### (.+)$/gm, '<strong class="ai-bold-subheader">$1</strong><br>');
   
-  // Bold text (**text**)
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Doctor names should remain as plain text - no bold formatting needed
   
   // Bullet points (- item or * item)
   html = html.replace(/^[-*] (.+)$/gm, '<li class="ai-bullet">$1</li>');
@@ -172,18 +188,29 @@ function parseMarkdown(text) {
   // Handle section labels that end with colon (like "Surgical Services:")
   html = html.replace(/^([A-Z][^:]+:)$/gm, '<h4 class="ai-subheader">$1</h4>');
   
-  // Line breaks (double newlines become paragraphs)
-  html = html.replace(/\n\n/g, '</p><p class="ai-paragraph">');
-  html = '<p class="ai-paragraph">' + html + '</p>';
-  
-  // Clean up empty paragraphs
-  html = html.replace(/<p class="ai-paragraph"><\/p>/g, '');
-  html = html.replace(/<p class="ai-paragraph">\s*<\/p>/g, '');
-  html = html.replace(/<p class="ai-paragraph">\s*<\/p>/g, '');
-  
-  // Clean up paragraphs that only contain headers or lists
-  html = html.replace(/<p class="ai-paragraph">(<h[34][^>]*>.*?<\/h[34]>)<\/p>/g, '$1');
-  html = html.replace(/<p class="ai-paragraph">(<[uo]l[^>]*>.*?<\/[uo]l>)<\/p>/gs, '$1');
+      // Clean up unwanted periods after sections (before creating paragraphs)
+    // Remove periods that appear at the end of lines that are followed by headers or lists
+    html = html.replace(/\.\s*\n(?=<h[34]|<[uo]l)/g, '\n');
+    
+    // Remove periods at the end of section headers
+    html = html.replace(/(<h[34][^>]*>[^<]*)\.<\/h[34]>/g, '$1</h$2>');
+    
+    // Line breaks (double newlines become paragraphs)
+    html = html.replace(/\n\n/g, '</p><p class="ai-paragraph">');
+    html = '<p class="ai-paragraph">' + html + '</p>';
+    
+    // Clean up empty paragraphs
+    html = html.replace(/<p class="ai-paragraph"><\/p>/g, '');
+    html = html.replace(/<p class="ai-paragraph">\s*<\/p>/g, '');
+    html = html.replace(/<p class="ai-paragraph">\s*<\/p>/g, '');
+    
+    // Clean up paragraphs that only contain headers or lists
+    html = html.replace(/<p class="ai-paragraph">(<h[34][^>]*>.*?<\/h[34]>)<\/p>/g, '$1');
+    html = html.replace(/<p class="ai-paragraph">(<[uo]l[^>]*>.*?<\/[uo]l>)<\/p>/gs, '$1');
+    
+    // Remove periods that appear right before closing paragraph tags when followed by headers/lists
+    html = html.replace(/\.<\/p>(\s*<h[34])/g, '</p>$1');
+    html = html.replace(/\.<\/p>(\s*<[uo]l)/g, '</p>$1');
   
   return html;
 }
@@ -282,7 +309,7 @@ function viewReport(reportId, domain) {
   clearChatMessages();
   
   // Add welcome message
-  addChatMessage(`Hi! I'm here to help you understand this report about ${domain}. Ask me anything about their services, locations, or any details you'd like to know more about.`, 'ai');
+  addChatMessage(`Hi! I'm your Cosentus sales assistant here to help you with this prospect (${domain}). I can help you understand their services, create discovery call questions, prepare talking points, assess their fit for Cosentus, or analyze sales opportunities. What would you like to explore?`, 'ai');
 }
 
 // Function to close PDF modal

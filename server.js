@@ -1,6 +1,6 @@
 import express from 'express';
 import { crawlWebsite } from './utils/crawler.js';
-import { summarizeWebsite, chatWithReport } from './utils/openai.js';
+import { summarizeWebsite, chatWithReport, generalChat } from './utils/openai.js';
 import { 
   saveReport, 
   checkExistingReport, 
@@ -332,46 +332,12 @@ app.post('/generate-pdf', async (req, res) => {
       });
     }
 
-    // PDF GENERATION
-    const doc = new PDFDocument({
-      margins: { top: 50, bottom: 50, left: 50, right: 50 }
-    });
-    res.setHeader('Content-Type', 'application/pdf');
-    doc.pipe(res);
-
-    doc.fontSize(18).font('Helvetica-Bold').text('Cosentus Sales Report', { align: 'center' });
-    doc.moveDown();
-
-    // Render lines to PDF
-    const pdfLines = finalSummary.split('\n');
-    let currentY = doc.y;
-    pdfLines.forEach(line => {
-      let trimmedLine = line.trim();
-      if (trimmedLine === '') {
-        currentY += 8;
-        doc.y = currentY;
-      } else if (/^[A-Z\s]+$/.test(trimmedLine) && trimmedLine.length > 5) {
-        // Section headings - ALL CAPS, bold, larger font
-        currentY += 15;
-        doc.y = currentY;
-        doc.fontSize(16).font('Helvetica-Bold').text(trimmedLine, { align: 'left' });
-        currentY = doc.y + 8;
-      } else if (trimmedLine.startsWith('•')) {
-        // Bullet points - handle bold text within bullets
-        doc.y = currentY;
-        doc.fontSize(11);
-        renderLineWithBold(doc, trimmedLine, { indent: 0 });
-        currentY = doc.y + 4;
-      } else {
-        // Regular text - handle bold text within paragraphs
-        doc.y = currentY;
-        doc.fontSize(11);
-        renderLineWithBold(doc, trimmedLine, { indent: 0 });
-        currentY = doc.y + 8;
-      }
-    });
-
-    doc.end();
+    // Return the ID of the new report
+    if (savedReport) {
+      res.json({ success: true, reportId: savedReport.id });
+    } else {
+      throw new Error('Failed to save the report.');
+    }
   } catch (error) {
     console.error('❌ Error generating report:', error);
 
@@ -393,7 +359,24 @@ app.post('/generate-pdf', async (req, res) => {
   }
 });
 
-// API endpoint for AI chat with report
+// API endpoint for general chat (no report)
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question) {
+      return res.status(400).json({ success: false, message: 'Question is required' });
+    }
+
+    const result = await generalChat(question);
+    res.json({ success: true, answer: result.answer, tokens_used: result.tokens_used });
+
+  } catch (error) {
+    console.error('❌ General chat error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to get AI response.' });
+  }
+});
+
+// API endpoint for chat related to a specific report
 app.post('/api/chat/:reportId', async (req, res) => {
   console.log('📨 Chat API called:', { reportId: req.params.reportId, body: req.body });
   

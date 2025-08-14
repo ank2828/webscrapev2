@@ -1,0 +1,77 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "209c73e4-7f11-4a67-b7d6-4e873f4ca478",
+              "name": "action",
+              "value": "={{ $json.action || 'variations' }}",
+              "type": "string"
+            },
+            {
+              "id": "c4e337a7-b70a-4005-8a58-a07c579f8f90",
+              "name": "sessionId",
+              "value": "={{ $json.sessionId || $json.headers['x-session-id'] || $json.query.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "03cd5b83-ea42-410b-8282-e6b70446b9f3",
+              "name": "message",
+              "value": "={{ $json.message || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "82fd258c-95f0-439d-82e3-15420d672378",
+              "name": "variationId",
+              "value": "={{ $json.variationId || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-64, -128],
+      "id": "8d587430-06e1-4278-b8ca-f37b44512337",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "value1": "={{ $json.action }}",
+        "operation": "equal",
+        "dataType": "string",
+        "rules": {
+          "values": [
+            { "value2": "variations" },
+            { "value2": "feedback" },
+            { "value2": "approve" }
+          ]
+        },
+        "options": {
+          "caseSensitive": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [144, -128],
+      "id": "76bf7433-34c6-4109-b82a-9a5deb77665f",
+      "name": "Route by action"
+    }
+  ],
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Route by action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

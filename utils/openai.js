@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import { COSENTUS_KNOWLEDGE_BASE } from './cosentus-knowledge-base.js';
 dotenv.config();
 
 // Check if API key exists
@@ -134,9 +135,8 @@ Based on this information: ${text}`;
   aiOutput = aiOutput.replace(/• Moderate:[\s\S]*?(?=• Simple:|OPERATIONAL DETAILS|$)/gi, '');
   aiOutput = aiOutput.replace(/• Simple:[\s\S]*?(?=OPERATIONAL DETAILS|$)/gi, '');
   
-  // Convert single asterisks to double asterisks for bold names
-  // Convert *name* to **name** so PDF renderer can detect them
-  aiOutput = aiOutput.replace(/\*([^*]+)\*/g, '**$1**').trim();
+  // Remove all asterisk formatting - no bold formatting needed
+  aiOutput = aiOutput.replace(/\*+([^*]+)\*+/g, '$1').trim();
 
   // MINIMAL SAFEGUARDS - Only remove the most problematic patterns without touching formatting
   aiOutput = aiOutput.replace(/Billing Complexity Analysis:/gi, '');
@@ -215,7 +215,37 @@ export async function chatWithReport(question, reportData) {
       structuredData += `\n`;
     });
     
-    const systemPrompt = `You are an AI sales assistant that helps users understand and work with a specific company's report about ${domain}.
+    const systemPrompt = `You are an AI sales assistant helping COSENTUS SALESPEOPLE analyze prospects and prepare for sales activities.
+
+🎯 CRITICAL CONTEXT:
+- The USER is a COSENTUS salesperson
+- The company in the report (${domain}) is a PROSPECT that Cosentus wants to sell TO
+- Cosentus provides Revenue Cycle Management (RCM) services TO healthcare practices
+- Your role is to help the Cosentus salesperson understand this prospect and sell to them
+
+💼 COSENTUS COMPANY KNOWLEDGE:
+Company: ${COSENTUS_KNOWLEDGE_BASE.company.name} - ${COSENTUS_KNOWLEDGE_BASE.company.type} (${COSENTUS_KNOWLEDGE_BASE.company.founded}, ${COSENTUS_KNOWLEDGE_BASE.company.size})
+Performance: ${COSENTUS_KNOWLEDGE_BASE.performance.collectionRate}, ${COSENTUS_KNOWLEDGE_BASE.performance.averageAR}, ${COSENTUS_KNOWLEDGE_BASE.performance.revenueIncrease}
+Value Proposition: ${COSENTUS_KNOWLEDGE_BASE.valueProposition.main}
+
+🎯 IDEAL PROSPECTS FOR COSENTUS:
+- High-reimbursement procedures (orthopedics, pain management, surgery centers)
+- Complex billing needs or current inefficiencies
+- Multiple locations needing coordination
+- Poor collection rates (<95%) or long A/R (>40 days)
+- Annual revenue >$500K, growth-focused practices
+
+❓ KEY DISCOVERY QUESTIONS TO SUGGEST:
+Current Billing: ${COSENTUS_KNOWLEDGE_BASE.salesProcess.discoveryQuestions.currentBilling.slice(0, 3).map(q => `"${q}"`).join(', ')}
+Pain Points: ${COSENTUS_KNOWLEDGE_BASE.salesProcess.discoveryQuestions.painPoints.slice(0, 2).map(q => `"${q}"`).join(', ')}
+Practice Details: ${COSENTUS_KNOWLEDGE_BASE.salesProcess.discoveryQuestions.practiceDetails.slice(0, 2).map(q => `"${q}"`).join(', ')}
+
+🎯 FOR SALES REQUESTS (cheat sheets, talking points, etc.):
+- Frame everything from Cosentus selling TO them perspective
+- Use their specific practice details to customize approach
+- Include relevant discovery questions based on their services
+- Suggest how to position Cosentus value based on their specialties
+- Create actionable sales tools for Cosentus salespeople
 
 CRITICAL DATA USAGE INSTRUCTIONS:
 1. ALWAYS prioritize the scraped data provided below as your PRIMARY source of truth
@@ -239,24 +269,56 @@ EXAMPLE APPROACHES:
 - "What are their contact details?" → Use only scraped contact information
 - "What questions should I ask about their spine surgery program?" → Combine their specific spine services with general discovery questions
 
-FORMATTING REQUIREMENTS - CRITICAL:
-- ALWAYS use markdown formatting for better readability
-- Use ## for main section headers (e.g., ## Services Offered)
-- Use ### for subsections (e.g., ### Surgical Services)
-- Use **bold** for important terms, names, and key information
-- ALWAYS use bullet points (-) for lists - NEVER put multiple items on one line
-- Each service/item must be on its own line with a dash (-)
-- Use numbered lists (1.) when showing steps or priorities
-- Add proper spacing between sections with double line breaks
-- NEVER create run-on sentences with multiple items separated by dashes
-- Example of CORRECT formatting:
-  ### Surgical Services
-  - **Spine Surgery** (complex procedures)
-  - **Total Joint Replacement** (hip, knee, shoulder)
-  - **Sports Medicine** (arthroscopic procedures)
-  
-- Example of INCORRECT formatting (DO NOT DO THIS):
-  - Spine Surgery (complex) - Total Joint Replacement (complex) - Sports Medicine (moderate)
+FORMATTING REQUIREMENTS - ABSOLUTELY MANDATORY:
+
+🚨 CRITICAL FORMATTING RULES (NEVER VIOLATE THESE):
+1. **COMPLETE SENTENCES ONLY**: Every bullet point must be a complete, grammatically correct sentence
+2. **ONE CONCEPT PER BULLET**: Never split a single thought across multiple bullet points
+3. **NO SENTENCE FRAGMENTS**: Every bullet must be able to stand alone as a complete thought
+4. **CONSISTENT STRUCTURE**: Use the same format pattern throughout the entire response
+
+📝 MARKDOWN STRUCTURE RULES:
+- Use ## for main section headers (e.g., ## Discovery Questions)
+- Use ### for major subsections (e.g., ### Current Billing Assessment)
+- Use #### for minor subsections (will display as bold subheadings)
+- Use plain text formatting without bold symbols
+- Use bullet points (-) for lists, with each item as a complete sentence
+- Use numbered lists (1.) only for sequential steps or priorities
+- Add double line breaks between all sections
+- AVOID using excessive markdown - keep formatting clean and natural
+
+✅ BULLET POINT RULES (ENFORCE STRICTLY):
+- Each bullet point must be a COMPLETE sentence with proper punctuation
+- Start each bullet with a capital letter, end with a period
+- Never split one sentence into multiple bullets
+- Never put multiple concepts in one bullet separated by commas or dashes
+- Each bullet should express ONE complete thought
+
+CORRECT BULLET FORMAT EXAMPLES:
+- Current collection rate assessment is essential to understand their baseline performance.
+- Accounts receivable analysis will reveal opportunities for improvement.
+- Denial management review should focus on first-pass rejection rates.
+
+INCORRECT FORMATS (NEVER DO THIS):
+- Current collection rate, A/R analysis, denial management
+- Collection rate assessment - should focus on baseline performance
+- Understanding their baseline, revealing opportunities, focusing on rejections
+
+📋 RESPONSE STRUCTURE TEMPLATE:
+Every response should follow this structure:
+1. Brief opening statement (1-2 sentences)
+2. Main sections with ## headers
+3. Subsections with ### headers when needed
+4. Bullet points that are complete sentences
+5. Clear conclusion or next steps
+
+🔍 QUALITY CHECK BEFORE RESPONDING:
+Before sending any response, verify:
+- Every bullet point is a complete sentence
+- No sentences are broken across multiple bullets
+- All formatting is consistent throughout
+- Headers are properly structured
+- Spacing is uniform between sections
 
 SPECIAL INSTRUCTION FOR SERVICES QUESTIONS:
 If asked about services, procedures, or what they offer, you must:
@@ -265,7 +327,7 @@ If asked about services, procedures, or what they offer, you must:
 - Look in headings, content paragraphs, lists, and any other sections
 - Provide the MOST COMPLETE list possible from all sources
 - Organize services by category if possible (surgical vs non-surgical, by specialty, etc.)
-- Format as clear bullet points with **bold** service names
+- Format as clear bullet points with plain text service names
 
 AVAILABLE DATA:
 ${structuredData.substring(0, 20000)} ${structuredData.length > 20000 ? '\n\n[Note: Some data truncated due to context limits, but comprehensive data included above]' : ''}
@@ -277,59 +339,16 @@ When answering, always:
 - Be specific about what you found
 - If information isn't in the data, clearly state that`;
 
-    // Check if this is a services-related question to provide specific formatting instructions
-    const isServicesQuestion = question.toLowerCase().includes('service') || 
-                               question.toLowerCase().includes('procedure') || 
-                               question.toLowerCase().includes('treatment') ||
-                               question.toLowerCase().includes('offer') ||
-                               question.toLowerCase().includes('provide');
-    
-    // Detect question type to provide appropriate instructions
-    const isFactualQuestion = question.toLowerCase().includes('what') && 
-                              (question.toLowerCase().includes('service') || 
-                               question.toLowerCase().includes('contact') ||
-                               question.toLowerCase().includes('location') ||
-                               question.toLowerCase().includes('phone') ||
-                               question.toLowerCase().includes('address'));
-    
-    const isStrategicQuestion = question.toLowerCase().includes('cheat sheet') ||
-                               question.toLowerCase().includes('talking points') ||
-                               question.toLowerCase().includes('discovery call') ||
-                               question.toLowerCase().includes('questions to ask') ||
-                               question.toLowerCase().includes('competitive') ||
-                               question.toLowerCase().includes('strategy') ||
-                               question.toLowerCase().includes('approach');
-    
-    let userPrompt;
-    
-    if (isFactualQuestion) {
-      userPrompt = `Based ONLY on the provided scraped data about ${domain}, please answer this factual question: ${question}`;
-    } else if (isStrategicQuestion) {
-      userPrompt = `Using the provided scraped data about ${domain} as your foundation, create a strategic response to this request: ${question}
 
-INSTRUCTIONS FOR STRATEGIC RESPONSES:
-- Use ALL the specific company details from the scraped data as your foundation
-- Apply general sales/business methodology to create useful formats
-- Clearly distinguish between facts from the data vs. strategic recommendations
-- Make it practical and actionable for someone working with this specific company`;
-    } else {
-      userPrompt = `Using the provided data about ${domain} as your primary source, please answer this question: ${question}`;
-    }
     
-    if (isServicesQuestion) {
-      userPrompt += `
+    const userPrompt = `Based on the provided data about ${domain}, please answer this question: ${question}
 
-CRITICAL FORMATTING REMINDER FOR SERVICES:
-- Use ### for service categories (e.g., ### Surgical Services)
-- Put each individual service on its own line with a dash (-)
-- Use **bold** for service names
-- NEVER put multiple services on the same line separated by dashes
-- Example format:
-  ### Surgical Services
-  - **Spine Surgery** (complex procedures)
-  - **Total Joint Replacement** (hip, knee, shoulder)
-  - **Sports Medicine** (arthroscopic procedures)`;
-    }
+Please format your response clearly with:
+- Complete sentences in bullet points
+- Proper markdown headers (## for sections, ### for subsections)
+- Bold formatting for important terms`;
+    
+
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -340,11 +359,11 @@ CRITICAL FORMATTING REMINDER FOR SERVICES:
           content: userPrompt
         }
       ],
-      max_tokens: 600, // Increased for more detailed responses
-      temperature: 0.3 // Lower temperature for more factual responses
+      max_tokens: 800, // Increased for properly formatted detailed responses
+      temperature: 0.2 // Lower temperature for more consistent formatting
     });
 
-    const answer = response.choices[0].message.content.trim();
+    let answer = response.choices[0].message.content.trim();
     
     return {
       answer,
@@ -356,3 +375,41 @@ CRITICAL FORMATTING REMINDER FOR SERVICES:
     throw new Error('Failed to generate response. Please try again.');
   }
 }
+
+// Function for general AI chat (no report context)
+export async function generalChat(question) {
+  if (!question) {
+    throw new Error('Question is required');
+  }
+
+  try {
+    const systemPrompt = `You are an expert Cosentus sales assistant. Your role is to help the Cosentus sales team with general questions about sales strategies, objection handling, and understanding different medical specialties.
+
+    **Instructions:**
+    - Provide concise, actionable advice.
+    - Do not ask for a report or assume any specific prospect context.
+    - Use clear, professional language.
+    - Format responses with markdown for readability (headers, lists, bold text).`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: question }
+      ],
+      max_tokens: 800,
+      temperature: 0.3,
+    });
+
+    return {
+      answer: response.choices[0].message.content.trim(),
+      tokens_used: response.usage?.total_tokens || 0
+    };
+
+  } catch (error) {
+    console.error('❌ Error in general chat:', error);
+    throw new Error('Failed to generate AI response.');
+  }
+}
+
+

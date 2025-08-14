@@ -13,7 +13,7 @@
     <div class="nav-container">
       <div class="nav-brand">
         <span class="brand-icon">✦</span>
-        <span class="brand-text">Sales Reporter</span>
+        <span class="brand-text">Cosentus Sales Reporter</span>
       </div>
       <div class="nav-links">
         <a href="/" class="nav-link active">Home</a>
@@ -33,8 +33,8 @@
         </div>
         
         <h1 class="hero-title">
-          We analyze your prospects into<br>
-          <span class="accent-text">actionable sales insights</span>
+          We analyze and turn your prospects<br>
+          <span class="accent-text">into actionable sales insights</span>
         </h1>
         
         <p class="hero-description">
@@ -47,12 +47,12 @@
       <!-- Stats Section -->
       <div class="stats-container">
         <div class="stat-item">
-          <div class="stat-number">90% </div>
+          <div class="stat-number">95% </div>
           <div class="stat-label">Less research time</div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
-          <div class="stat-number">3-5 mins </div>
+          <div class="stat-number">1-2 mins </div>
           <div class="stat-label">To complete report</div>
         </div>
         <div class="stat-divider"></div>
@@ -83,8 +83,40 @@
         <button class="generate-btn">Generate Report</button>
       </div>
 
-      <iframe id="pdf-viewer" style="display: none;"></iframe>
-      <a id="download-link" class="download-btn" href="#" download>Download PDF Report</a>
+      <!-- Report Display Container -->
+      <div id="report-display" class="report-display-container" style="display: none;">
+        <!-- PDF Viewer Container -->
+        <div class="pdf-viewer-container">
+          <iframe id="pdf-viewer"></iframe>
+          <a id="download-link" class="download-btn" href="#" download>Download PDF Report</a>
+        </div>
+        
+        <!-- AI Chat Interface -->
+        <div class="ai-chat-container">
+          <div class="ai-chat-header">
+            <span class="ai-chat-icon">🤖</span>
+            <span class="ai-chat-title">Ask AI Agent</span>
+            <span class="ai-chat-subtitle">Ask questions about this report</span>
+          </div>
+          
+          <div id="chat-messages" class="chat-messages">
+            <!-- Chat messages will appear here -->
+          </div>
+          
+          <div class="chat-input-container">
+            <input 
+              type="text" 
+              id="chat-input" 
+              class="chat-input" 
+              placeholder="Ask about services, people, or other details"
+              maxlength="200"
+            >
+            <button id="chat-send" class="chat-send-btn">
+              <span class="chat-send-icon">➤</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
