@@ -14,10 +14,5 @@
   ],
   "env": {
     "USE_SUPABASE": "false"
-  },
-  "functions": {
-    "server.js": {
-      "maxDuration": 30
-    }
   }
 }
