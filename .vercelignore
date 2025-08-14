@@ -1,0 +1,20 @@
+# Ignore development files
+.env.local
+.env.development
+node-v22.16.0-win-x64/
+data/
+*.log
+coverage/
+.nyc_output
+test-supabase.js
+CRITICAL-FIX-DELETE-POLICIES.sql
+supabase-schema.sql
+n8n_editandswitch.txt
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

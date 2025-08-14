@@ -24,15 +24,25 @@ if (USE_SUPABASE) {
   console.log('📁 Using local JSON file storage (Supabase disabled).');
 }
 
-// Local storage paths
-const DATA_DIR = 'data';
+// Local storage paths - Vercel compatible
+const DATA_DIR = process.env.VERCEL ? '/tmp/data' : 'data';
 const REPORTS_FILE = path.join(DATA_DIR, 'reports.json');
 const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics.json');
 const REQUESTS_FILE = path.join(DATA_DIR, 'requests.json');
 
+// Ensure data directory exists (Vercel /tmp is writable)
+async function ensureDataDir() {
+  try {
+    await fs.access(DATA_DIR);
+  } catch {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+  }
+}
+
 // Utility functions for local JSON storage
 async function readJSONFile(filePath) {
   try {
+    await ensureDataDir(); // Ensure directory exists
     const data = await fs.readFile(filePath, 'utf8');
     return JSON.parse(data);
   } catch (error) {
@@ -44,6 +54,7 @@ async function readJSONFile(filePath) {
 }
 
 async function writeJSONFile(filePath, data) {
+  await ensureDataDir(); // Ensure directory exists
   await fs.writeFile(filePath, JSON.stringify(data, null, 2));
 }
 

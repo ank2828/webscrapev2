@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer';
 
 export async function crawlWebsite(startUrl, maxDepth = 6, maxPages = 35) {
+  // Vercel-optimized Puppeteer configuration
   const browser = await puppeteer.launch({
     headless: true,
     args: [
@@ -9,8 +10,32 @@ export async function crawlWebsite(startUrl, maxDepth = 6, maxPages = 35) {
       '--disable-dev-shm-usage',
       '--disable-gpu',
       '--disable-http2',
+      '--disable-extensions',
+      '--disable-plugins',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--single-process', // Critical for Vercel
+      '--memory-pressure-off',
+      '--max_old_space_size=4096',
       '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    ]
+    ],
+    // Vercel-specific optimizations
+    ...(process.env.VERCEL ? {
+      executablePath: '/usr/bin/google-chrome-stable',
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--single-process',
+        '--no-first-run',
+        '--no-zygote',
+        '--deterministic-fetch',
+        '--disable-features=TranslateUI',
+        '--disable-ipc-flooding-protection'
+      ]
+    } : {})
   });
   const visited = new Set();
   const queued = new Set(); // Track all URLs that have been queued to prevent duplicates
