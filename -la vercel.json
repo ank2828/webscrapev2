@@ -1,0 +1,5 @@
+[33m200742f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m Add Vercel configuration for deployment fix
+[33mad5b3c8[m 8/14 changes
+[33mc494afc[m Major AI Chat Agent Enhancement: Advanced Formatting, Discovery Tools & Comprehensive Data Access
+[33m6d5f8d9[m Simplify loading animation: button now only fades opacity while loading (no glow)
+[33m54852a1[m Clean up codebase: remove dead code and unused functions - Delete unused utils/scraper.js file - Remove inactive setActiveNavLink function - All functionality preserved
