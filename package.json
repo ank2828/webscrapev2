@@ -3,13 +3,18 @@
   "version": "1.0.0",
   "type": "module",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
+  "engines": {
+    "node": ">=18.0.0"
   },
-  "keywords": [],
-  "author": "",
+  "scripts": {
+    "start": "node server.js",
+    "build": "echo 'No build step required'",
+    "vercel-build": "echo 'Vercel build complete'"
+  },
+  "keywords": ["sales", "intelligence", "healthcare", "rcm"],
+  "author": "Cosentus",
   "license": "ISC",
-  "description": "",
+  "description": "AI-powered sales intelligence platform for healthcare RCM",
   "dependencies": {
     "@supabase/supabase-js": "^2.50.1",
     "dotenv": "^16.5.0",
@@ -22,7 +27,6 @@
   "devDependencies": {
     "@eslint/js": "^9.28.0",
     "eslint": "^9.28.0",
-    "globals": "^16.2.0",
-    "husky": "^8.0.0"
+    "globals": "^16.2.0"
   }
 }
